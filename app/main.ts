@@ -8,3 +8,14 @@ const rl = createInterface({
 
 // TODO: Uncomment the code below to pass the first stage
 rl.prompt();
+
+const inputListener: Parameters<typeof rl.on>[1] = input => {
+    handleCommandNotFound(input);
+    rl.prompt();
+}
+
+rl.on('line', inputListener)
+
+function handleCommandNotFound(input: string): string {
+    return `${input}: command not found`
+}
