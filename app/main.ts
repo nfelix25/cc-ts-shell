@@ -11,7 +11,7 @@ rl.prompt();
 
 const inputListener: Parameters<typeof rl.on>[1] = input => {
     handleCommandNotFound(input);
-    rl.prompt();
+    // rl.prompt();
 }
 
 rl.on('line', inputListener)
