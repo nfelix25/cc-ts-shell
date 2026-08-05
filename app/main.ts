@@ -16,6 +16,6 @@ const inputListener: Parameters<typeof rl.on>[1] = input => {
 
 rl.on('line', inputListener)
 
-function handleCommandNotFound(input: string): string {
-    return `${input}: command not found`
+function handleCommandNotFound(input: string) {
+    console.log(`${input}: command not found`);
 }
