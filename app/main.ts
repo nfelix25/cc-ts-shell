@@ -55,6 +55,8 @@ const directory: Directory = {
             ? "builtin"
             : "executable";
           console.log(`${candidateCommand} is a shell ${commandType}`);
+        } else {
+          handleCommandNotFound(candidateCommand);
         }
       },
     },
