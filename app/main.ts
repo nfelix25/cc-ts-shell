@@ -10,9 +10,9 @@ const rl = createInterface({
 rl.prompt();
 
 const inputListener: Parameters<typeof rl.on>[1] = (input) => {
-  const { command, args } = parseInput(input);
+  const { candidateCommand, args } = parseInput(input);
 
-  dispatch(command, args);
+  dispatch(candidateCommand, args);
 
   // Prompt the user for the next command if there are still listeners for the "line" event
   if (rl.listenerCount("line") > 0) {
@@ -27,47 +27,81 @@ const closeListener: Parameters<typeof rl.on>[1] = () => {
 rl.on("line", inputListener);
 rl.on("close", closeListener);
 
-function parseInput(input: string): { command: string; args: string[] } {
-  const [command, ...args] = input.split(" ");
+function parseInput(input: string): {
+  candidateCommand: string;
+  args: string[];
+} {
+  const [candidateCommand, ...args] = input.split(" ");
 
-  return { command, args };
-}
-
-function dispatch(command: string, args: string[]) {
-  // This should morph into the parser eg echo should send string not string[]
-  switch (command) {
-    case "exit": {
-      handlers.exit();
-      return;
-    }
-
-    case "echo": {
-      const output = parseArgs(args);
-      handlers.echo(output);
-      return;
-    }
-
-    default: {
-      console.log(`${command}: command not found`);
-      return;
-    }
-  }
+  return { candidateCommand, args };
 }
 
 function parseArgs(args: string[]): string {
   return args.join(" ");
 }
 
-const handlers = {
-  exit: () => rl.close(),
-  echo: (output: string) => console.log(output),
+type Directory = {
+  [K in "builtins" | "executables"]: Record<string, { handler: Function }>;
+};
+const directory: Directory = {
+  builtins: {
+    exit: { handler: () => rl.close() },
+    echo: { handler: (output: string) => console.log(output) },
+    type: {
+      handler: (candidateCommand: string) => {
+        const commandExists = isCommand(candidateCommand);
+        if (commandExists) {
+          const commandType = isBuiltinCommand(candidateCommand)
+            ? "builtin"
+            : "executable";
+          console.log(`${candidateCommand} is a shell ${commandType}`);
+        }
+      },
+    },
+  },
+  executables: {},
 };
 
-// app/
-//   main.ts        # wiring only: build the real ShellIO, start the repl
-//   repl.ts        # owns rl + prompt lifecycle; the ONLY importer of readline
-//   parse.ts       # string -> ParsedCommand (pure)
-//   builtins/
-//     index.ts     # registry + Builtin type
-//     echo.ts exit.ts
-//   types.ts       # ShellIO, Handler, ParsedCommand
+function isCommand(candidateCommand: string) {
+  return (
+    isBuiltinCommand(candidateCommand) || isExecutableCommand(candidateCommand)
+  );
+}
+
+function isBuiltinCommand(candidateBuiltinCommand: string) {
+  return candidateBuiltinCommand in directory.builtins;
+}
+function isExecutableCommand(candidateExecutableCommand: string) {
+  return candidateExecutableCommand in directory.builtins;
+}
+
+function dispatch(command: string, args: string[]) {
+  // This should morph into the parser eg echo should send string not string[]
+  switch (command) {
+    case "exit": {
+      directory.builtins.exit.handler();
+      return;
+    }
+
+    case "echo": {
+      const output = parseArgs(args);
+      directory.builtins.echo.handler(output);
+      return;
+    }
+
+    case "type": {
+      const command = parseArgs(args);
+      directory.builtins.type.handler(command);
+      return;
+    }
+
+    default: {
+      handleCommandNotFound(command);
+      return;
+    }
+  }
+}
+
+function handleCommandNotFound(command: string) {
+  console.log(`${command}: command not found`);
+}
