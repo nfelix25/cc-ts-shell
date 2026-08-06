@@ -105,5 +105,5 @@ function dispatch(command: string, args: string[]) {
 }
 
 function handleCommandNotFound(command: string) {
-  console.log(`${command}: command not found`);
+  console.log(`${command}: not found`);
 }
