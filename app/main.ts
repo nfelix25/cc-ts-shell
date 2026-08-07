@@ -1,3 +1,6 @@
+import { access, constants } from "fs/promises";
+import * as nodePath from "node:path";
+
 import { createInterface } from "readline";
 
 const rl = createInterface({
@@ -27,55 +30,54 @@ const closeListener: Parameters<typeof rl.on>[1] = () => {
 rl.on("line", inputListener);
 rl.on("close", closeListener);
 
-function parseInput(input: string): {
-  candidateCommand: string;
-  args: string[];
-} {
-  const [candidateCommand, ...args] = input.split(" ");
-
-  return { candidateCommand, args };
-}
-
-function parseArgs(args: string[]): string {
-  return args.join(" ");
-}
-
 type Directory = {
   [K in "builtins" | "executables"]: Record<string, { handler: Function }>;
 };
+
+// Future classes or expansions
+
 const directory: Directory = {
   builtins: {
     exit: { handler: () => rl.close() },
     echo: { handler: (output: string) => console.log(output) },
     type: {
       handler: (candidateCommand: string) => {
-        console.log(process.env);
         const commandExists = isCommand(candidateCommand);
         if (commandExists) {
-          const commandType = isBuiltinCommand(candidateCommand)
-            ? "builtin"
-            : "executable";
-          console.log(`${candidateCommand} is a shell ${commandType}`);
+          if (isBuiltinCommand(candidateCommand)) {
+            console.log(`${candidateCommand} is a shell builtin`);
+          } else {
+            const paths = parsePath(process.env.PATH ?? "");
+            const executable = findExecInPath(paths, candidateCommand);
+            console.log(executable);
+          }
         } else {
           handleCommandNotFound(candidateCommand);
         }
       },
     },
   },
+  // Incorrect pattern but leaving for type example
   executables: {},
 };
 
-function isCommand(candidateCommand: string) {
-  return (
-    isBuiltinCommand(candidateCommand) || isExecutableCommand(candidateCommand)
-  );
-}
+async function findExecInPath(dirs: string[], command: string) {
+  for (const dir in dirs) {
+    if (!dir) continue;
 
-function isBuiltinCommand(candidateBuiltinCommand: string) {
-  return candidateBuiltinCommand in directory.builtins;
-}
-function isExecutableCommand(candidateExecutableCommand: string) {
-  return candidateExecutableCommand in directory.builtins;
+    const candidate = nodePath.join(dir, command);
+
+    if (
+      await access(candidate, constants.X_OK).then(
+        () => true,
+        () => false,
+      )
+    ) {
+      return candidate;
+    }
+  }
+
+  return undefined;
 }
 
 function dispatch(command: string, args: string[]) {
@@ -103,6 +105,49 @@ function dispatch(command: string, args: string[]) {
       return;
     }
   }
+}
+
+// One off functions
+
+type IsColonPath<S extends string> = S extends ""
+  ? false
+  : S extends `${infer Head}:${infer Tail}`
+    ? Head extends ""
+      ? false
+      : IsColonPath<Tail>
+    : S extends ""
+      ? false
+      : true;
+type ColonPath<S extends string> = IsColonPath<S> extends true ? S : never;
+
+function parsePath<T extends string>(path: ColonPath<T>) {
+  return path.split(":");
+}
+
+function parseInput(input: string): {
+  candidateCommand: string;
+  args: string[];
+} {
+  const [candidateCommand, ...args] = input.split(" ");
+
+  return { candidateCommand, args };
+}
+
+function parseArgs(args: string[]): string {
+  return args.join(" ");
+}
+
+function isCommand(candidateCommand: string) {
+  return (
+    isBuiltinCommand(candidateCommand) || isExecutableCommand(candidateCommand)
+  );
+}
+
+function isBuiltinCommand(candidateBuiltinCommand: string) {
+  return candidateBuiltinCommand in directory.builtins;
+}
+function isExecutableCommand(candidateExecutableCommand: string) {
+  return candidateExecutableCommand in directory.builtins;
 }
 
 function handleCommandNotFound(command: string) {
