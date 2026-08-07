@@ -49,6 +49,7 @@ const directory: Directory = {
     echo: { handler: (output: string) => console.log(output) },
     type: {
       handler: (candidateCommand: string) => {
+        console.log(process.env);
         const commandExists = isCommand(candidateCommand);
         if (commandExists) {
           const commandType = isBuiltinCommand(candidateCommand)
