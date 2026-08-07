@@ -41,19 +41,19 @@ const directory: Directory = {
     exit: { handler: () => rl.close() },
     echo: { handler: (output: string) => console.log(output) },
     type: {
-      handler: (candidateCommand: string) => {
-        const commandExists = isCommand(candidateCommand);
-        if (commandExists) {
-          console.log("DQWDDQWWDQ");
-          if (isBuiltinCommand(candidateCommand)) {
-            console.log(`${candidateCommand} is a shell builtin`);
-          } else {
-            const paths = parsePath(process.env.PATH ?? "");
-            const executable = findExecInPath(paths, candidateCommand);
-            console.log("EXEC", executable);
-          }
+      handler: async (candidateCommand: string) => {
+        const isbuiltinCommand = isBuiltinCommand(candidateCommand);
+        if (isbuiltinCommand) {
+          console.log(`${candidateCommand} is a shell builtin`);
         } else {
-          handleCommandNotFound(candidateCommand);
+          const paths = parsePath(process.env.PATH ?? "");
+          const executablePath = await findExecInPath(paths, candidateCommand);
+
+          if (executablePath) {
+            handleExecutableCommand(candidateCommand, executablePath);
+          } else {
+            handleCommandNotFound(candidateCommand);
+          }
         }
       },
     },
@@ -61,6 +61,10 @@ const directory: Directory = {
   // Incorrect pattern but leaving for type example
   executables: {},
 };
+
+function handleExecutableCommand(command: string, path: string) {
+  console.log(`${command} is ${path}`);
+}
 
 async function findExecInPath(dirs: string[], command: string) {
   for (const dir in dirs) {
@@ -138,17 +142,8 @@ function parseArgs(args: string[]): string {
   return args.join(" ");
 }
 
-function isCommand(candidateCommand: string) {
-  return (
-    isBuiltinCommand(candidateCommand) || isExecutableCommand(candidateCommand)
-  );
-}
-
 function isBuiltinCommand(candidateBuiltinCommand: string) {
   return candidateBuiltinCommand in directory.builtins;
-}
-function isExecutableCommand(candidateExecutableCommand: string) {
-  return candidateExecutableCommand in directory.builtins;
 }
 
 function handleCommandNotFound(command: string) {
