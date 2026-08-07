@@ -1,4 +1,4 @@
-import { access, constants } from "fs/promises";
+import { accessSync, constants } from "node:fs";
 import * as nodePath from "node:path";
 
 import { createInterface } from "readline";
@@ -41,13 +41,13 @@ const directory: Directory = {
     exit: { handler: () => rl.close() },
     echo: { handler: (output: string) => console.log(output) },
     type: {
-      handler: async (candidateCommand: string) => {
+      handler: (candidateCommand: string) => {
         const isbuiltinCommand = isBuiltinCommand(candidateCommand);
         if (isbuiltinCommand) {
           console.log(`${candidateCommand} is a shell builtin`);
         } else {
           const paths = parsePath(process.env.PATH ?? "");
-          const executablePath = await findExecInPath(paths, candidateCommand);
+          const executablePath = findExecInPath(paths, candidateCommand);
 
           if (executablePath) {
             handleExecutableCommand(candidateCommand, executablePath);
@@ -66,18 +66,16 @@ function handleExecutableCommand(command: string, path: string) {
   console.log(`${command} is ${path}`);
 }
 
-async function findExecInPath(dirs: string[], command: string) {
+function findExecInPath(dirs: string[], command: string) {
   for (const dir of dirs) {
     if (!dir) continue;
 
     const candidate = nodePath.join(dir, command);
-    if (
-      await access(candidate, constants.X_OK).then(
-        () => true,
-        () => false,
-      )
-    ) {
+    try {
+      accessSync(candidate, constants.X_OK);
       return candidate;
+    } catch {
+      // Continue searching the remaining PATH entries.
     }
   }
 
