@@ -44,6 +44,7 @@ const directory: Directory = {
       handler: (candidateCommand: string) => {
         const commandExists = isCommand(candidateCommand);
         if (commandExists) {
+          console.log("DQWDDQWWDQ");
           if (isBuiltinCommand(candidateCommand)) {
             console.log(`${candidateCommand} is a shell builtin`);
           } else {
