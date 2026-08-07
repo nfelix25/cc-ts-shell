@@ -49,7 +49,7 @@ const directory: Directory = {
           } else {
             const paths = parsePath(process.env.PATH ?? "");
             const executable = findExecInPath(paths, candidateCommand);
-            console.log(executable);
+            console.log("EXEC", executable);
           }
         } else {
           handleCommandNotFound(candidateCommand);
