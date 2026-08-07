@@ -67,11 +67,10 @@ function handleExecutableCommand(command: string, path: string) {
 }
 
 async function findExecInPath(dirs: string[], command: string) {
-  for (const dir in dirs) {
+  for (const dir of dirs) {
     if (!dir) continue;
 
     const candidate = nodePath.join(dir, command);
-
     if (
       await access(candidate, constants.X_OK).then(
         () => true,
