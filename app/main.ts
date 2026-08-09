@@ -107,12 +107,9 @@ async function dispatch(command: string, args: string[]) {
       const executablePath = parseExecutablePath(command);
       if (executablePath) {
         const TEMP_ASYNC_WRAPPER = await new Promise((res, _) => {
-          exec(
-            `${executablePath} ${args.join(" ")}`,
-            (error, stdout, stderr) => {
-              res(console.log(stdout));
-            },
-          );
+          exec(`${command} ${args.join(" ")}`, (error, stdout, stderr) => {
+            res(console.log(stdout));
+          });
         });
         // Expected: "Program was passed 4 args (including program name)."
         // [tester::#IP1] Received: "$ null Program was passed 4 args (including program name)."
