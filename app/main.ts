@@ -106,7 +106,9 @@ function dispatch(command: string, args: string[]) {
       // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since handling possible executable is an entire subset
       const executablePath = parseExecutablePath(command);
       if (executablePath) {
-        execSync(`${command} ${args.join(" ")}`);
+        execSync(`${command} ${args.join(" ")}`, {
+          stdio: "inherit",
+        });
 
         // Expected: "Program was passed 4 args (including program name)."
         // [tester::#IP1] Received: "$ null Program was passed 4 args (including program name)."
