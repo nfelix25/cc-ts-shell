@@ -1,4 +1,4 @@
-import { exec } from "node:child_process";
+import { exec, execSync } from "node:child_process";
 import { accessSync, constants } from "node:fs";
 import * as nodePath from "node:path";
 
@@ -13,10 +13,10 @@ const rl = createInterface({
 // TODO: Uncomment the code below to pass the first stage
 rl.prompt();
 
-const inputListener: Parameters<typeof rl.on>[1] = async (input) => {
+const inputListener: Parameters<typeof rl.on>[1] = (input) => {
   const { candidateCommand, args } = parseInput(input);
 
-  await dispatch(candidateCommand, args);
+  dispatch(candidateCommand, args);
 
   // Prompt the user for the next command if there are still listeners for the "line" event
   if (rl.listenerCount("line") > 0) {
@@ -82,7 +82,7 @@ function findExecInPath(dirs: string[], command: string) {
   return undefined;
 }
 
-async function dispatch(command: string, args: string[]) {
+function dispatch(command: string, args: string[]) {
   // This should morph into the parser eg echo should send string not string[]
   switch (command) {
     case "exit": {
@@ -106,11 +106,8 @@ async function dispatch(command: string, args: string[]) {
       // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since handling possible executable is an entire subset
       const executablePath = parseExecutablePath(command);
       if (executablePath) {
-        const TEMP_ASYNC_WRAPPER = await new Promise((res, _) => {
-          exec(`${command} ${args.join(" ")}`, (error, stdout, stderr) => {
-            res(stdout);
-          });
-        });
+        execSync(`${command} ${args.join(" ")}`);
+
         // Expected: "Program was passed 4 args (including program name)."
         // [tester::#IP1] Received: "$ null Program was passed 4 args (including program name)."
       } else {
