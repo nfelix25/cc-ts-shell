@@ -110,7 +110,7 @@ async function dispatch(command: string, args: string[]) {
           exec(
             `${executablePath} ${args.join(" ")}`,
             (error, stdout, stderr) => {
-              res(console.log(error, stdout, stderr));
+              res(console.log(stdout);
             },
           );
         });
