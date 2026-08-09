@@ -20,6 +20,7 @@ const inputListener: Parameters<typeof rl.on>[1] = (input) => {
 
   // Prompt the user for the next command if there are still listeners for the "line" event
   if (rl.listenerCount("line") > 0) {
+    console.log("prompt");
     rl.prompt();
   }
 };
@@ -107,9 +108,11 @@ async function dispatch(command: string, args: string[]) {
       const executablePath = parseExecutablePath(command);
       if (executablePath) {
         const TEMP_ASYNC_WRAPPER = await new Promise((res, _) => {
+          console.log("wrapper");
           exec(
             `${executablePath} ${args.join(" ")}`,
             (error, stdout, stderr) => {
+              console.log("exec callback");
               res(console.log(error, stdout, stderr));
             },
           );
