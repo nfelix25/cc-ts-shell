@@ -1,3 +1,4 @@
+import { exec } from "node:child_process";
 import { accessSync, constants } from "node:fs";
 import * as nodePath from "node:path";
 
@@ -46,6 +47,7 @@ const directory: Directory = {
         if (isbuiltinCommand) {
           console.log(`${candidateCommand} is a shell builtin`);
         } else {
+          // TODO 1: BREAK OUT INTO OWN FUNCTION REUSE WITH executable logic
           const paths = parsePath(process.env.PATH ?? "");
           const executablePath = findExecInPath(paths, candidateCommand);
 
@@ -103,7 +105,19 @@ function dispatch(command: string, args: string[]) {
     }
 
     default: {
-      handleCommandNotFound(command);
+      // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since other is an entire subset
+      const paths = parsePath(process.env.PATH ?? "");
+      const executablePath = findExecInPath(paths, command);
+      if (executablePath) {
+        exec(
+          `${executablePath}/${command} ${args.join(" ")}`,
+          (error, stdout, stderr) => {
+            console.log(error, stdout, stderr);
+          },
+        );
+      } else {
+        handleCommandNotFound(command);
+      }
       return;
     }
   }
