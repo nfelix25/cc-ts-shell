@@ -47,9 +47,7 @@ const directory: Directory = {
         if (isbuiltinCommand) {
           console.log(`${candidateCommand} is a shell builtin`);
         } else {
-          // TODO 1: BREAK OUT INTO OWN FUNCTION REUSE WITH executable logic
-          const paths = parsePath(process.env.PATH ?? "");
-          const executablePath = findExecInPath(paths, candidateCommand);
+          const executablePath = parseExecutablePath(candidateCommand);
 
           if (executablePath) {
             handleExecutableCommand(candidateCommand, executablePath);
@@ -84,7 +82,7 @@ function findExecInPath(dirs: string[], command: string) {
   return undefined;
 }
 
-function dispatch(command: string, args: string[]) {
+async function dispatch(command: string, args: string[]) {
   // This should morph into the parser eg echo should send string not string[]
   switch (command) {
     case "exit": {
@@ -105,13 +103,19 @@ function dispatch(command: string, args: string[]) {
     }
 
     default: {
-      // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since other is an entire subset
-      const paths = parsePath(process.env.PATH ?? "");
-      const executablePath = findExecInPath(paths, command);
+      // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since handling possible executable is an entire subset
+      const executablePath = parseExecutablePath(command);
       if (executablePath) {
-        exec(`${executablePath} ${args.join(" ")}`, (error, stdout, stderr) => {
-          console.log(error, stdout, stderr);
+        const TEMP_ASYNC_WRAPPER = await new Promise((res, _) => {
+          exec(
+            `${executablePath} ${args.join(" ")}`,
+            (error, stdout, stderr) => {
+              res(console.log(error, stdout, stderr));
+            },
+          );
         });
+        // Expected: "Program was passed 4 args (including program name)."
+        // [tester::#IP1] Received: "$ null Program was passed 4 args (including program name)."
       } else {
         handleCommandNotFound(command);
       }
@@ -121,6 +125,12 @@ function dispatch(command: string, args: string[]) {
 }
 
 // One off functions
+
+function parseExecutablePath(command: string) {
+  const paths = parsePath(process.env.PATH ?? "");
+  const executablePath = findExecInPath(paths, command);
+  return executablePath;
+}
 
 type IsColonPath<S extends string> = S extends ""
   ? false
