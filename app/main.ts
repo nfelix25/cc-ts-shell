@@ -13,10 +13,10 @@ const rl = createInterface({
 // TODO: Uncomment the code below to pass the first stage
 rl.prompt();
 
-const inputListener: Parameters<typeof rl.on>[1] = (input) => {
+const inputListener: Parameters<typeof rl.on>[1] = async (input) => {
   const { candidateCommand, args } = parseInput(input);
 
-  dispatch(candidateCommand, args);
+  await dispatch(candidateCommand, args);
 
   // Prompt the user for the next command if there are still listeners for the "line" event
   if (rl.listenerCount("line") > 0) {
