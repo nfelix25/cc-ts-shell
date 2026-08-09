@@ -108,7 +108,7 @@ async function dispatch(command: string, args: string[]) {
       if (executablePath) {
         const TEMP_ASYNC_WRAPPER = await new Promise((res, _) => {
           exec(`${command} ${args.join(" ")}`, (error, stdout, stderr) => {
-            res(undefined);
+            res(stdout);
           });
         });
         // Expected: "Program was passed 4 args (including program name)."
