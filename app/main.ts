@@ -109,12 +109,9 @@ function dispatch(command: string, args: string[]) {
       const paths = parsePath(process.env.PATH ?? "");
       const executablePath = findExecInPath(paths, command);
       if (executablePath) {
-        exec(
-          `${executablePath}/${command} ${args.join(" ")}`,
-          (error, stdout, stderr) => {
-            console.log(error, stdout, stderr);
-          },
-        );
+        exec(`${executablePath} ${args.join(" ")}`, (error, stdout, stderr) => {
+          console.log(error, stdout, stderr);
+        });
       } else {
         handleCommandNotFound(command);
       }
