@@ -1,17 +1,40 @@
 import { exec, execSync } from "node:child_process";
 import { accessSync, constants } from "node:fs";
 import * as nodePath from "node:path";
+import type { Interface } from "node:readline";
 
 import { createInterface } from "readline";
 
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: "$ ",
-});
+class ShellIO {
+  #current_directory = "";
+  #io: Interface;
 
-// TODO: Uncomment the code below to pass the first stage
-rl.prompt();
+  constructor() {
+    this.#io = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      prompt: "$ ",
+    });
+
+    this.#io.prompt();
+    this.#current_directory = process.cwd();
+  }
+
+  updateDir(newDir: string) {
+    this.#current_directory = newDir;
+  }
+
+  currentDir() {
+    return this.#current_directory;
+  }
+
+  io() {
+    return this.#io;
+  }
+}
+
+const shell = new ShellIO(),
+  rl = shell.io();
 
 const inputListener: Parameters<typeof rl.on>[1] = (input) => {
   const { candidateCommand, args } = parseInput(input);
@@ -41,6 +64,7 @@ const directory: Directory = {
   builtins: {
     exit: { handler: () => rl.close() },
     echo: { handler: (output: string) => console.log(output) },
+    pwd: { handler: () => console.log(shell.currentDir()) },
     type: {
       handler: (candidateCommand: string) => {
         const isbuiltinCommand = isBuiltinCommand(candidateCommand);
@@ -106,6 +130,9 @@ function dispatch(command: string, args: string[]) {
       // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since handling possible executable is an entire subset
       const executablePath = parseExecutablePath(command);
       if (executablePath) {
+        // execSync captures the child's output by default. Using "inherit" connects the
+        // child directly to this shell's stdin, stdout, and stderr, so its full output
+        // is displayed as it runs instead of being returned as a Buffer.
         execSync(`${command} ${args.join(" ")}`, {
           stdio: "inherit",
         });
