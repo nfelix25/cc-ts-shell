@@ -65,7 +65,7 @@ const directory: Directory = {
     cd: {
       handler: (candidatePath: string) => {
         const stats = statSync(candidatePath);
-        console.log("state", stats);
+        console.log("state", stats.isDirectory());
         if (stats) {
           if (stats.isDirectory()) {
             shell.updateDir(candidatePath);
