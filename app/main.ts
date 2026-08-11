@@ -21,7 +21,6 @@ class ShellIO {
   }
 
   updateDir(newDir: string) {
-    console.log(newDir);
     this.#current_directory = newDir;
   }
 
