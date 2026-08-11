@@ -1,5 +1,5 @@
-import { exec, execSync } from "node:child_process";
-import { accessSync, constants } from "node:fs";
+import { execSync } from "node:child_process";
+import { accessSync, constants, statSync } from "node:fs";
 import * as nodePath from "node:path";
 import type { Interface } from "node:readline";
 
@@ -62,6 +62,19 @@ type Directory = {
 
 const directory: Directory = {
   builtins: {
+    cd: {
+      handler: (candidatePath: string) => {
+        const stats = statSync(candidatePath);
+
+        if (stats) {
+          if (stats.isDirectory()) {
+            shell.updateDir(candidatePath);
+          } else {
+            console.log(`${candidatePath}: No such file or directory`);
+          }
+        }
+      },
+    },
     exit: { handler: () => rl.close() },
     echo: { handler: (output: string) => console.log(output) },
     pwd: { handler: () => console.log(shell.currentDir()) },
@@ -109,6 +122,12 @@ function findExecInPath(dirs: string[], command: string) {
 function dispatch(command: string, args: string[]) {
   // This should morph into the parser eg echo should send string not string[]
   switch (command) {
+    case "cd": {
+      const path = parseArgs(args)[0];
+      directory.builtins.cd.handler(path);
+      return;
+    }
+
     case "exit": {
       directory.builtins.exit.handler();
       return;
@@ -120,14 +139,14 @@ function dispatch(command: string, args: string[]) {
       return;
     }
 
-    case "type": {
-      const opts = parseArgs(args);
-      directory.builtins.type.handler(opts);
+    case "pwd": {
+      directory.builtins.pwd.handler();
       return;
     }
 
-    case "pwd": {
-      directory.builtins.pwd.handler();
+    case "type": {
+      const opts = parseArgs(args);
+      directory.builtins.type.handler(opts);
       return;
     }
 
