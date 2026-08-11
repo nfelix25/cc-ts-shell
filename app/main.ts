@@ -121,8 +121,13 @@ function dispatch(command: string, args: string[]) {
     }
 
     case "type": {
-      const command = parseArgs(args);
-      directory.builtins.type.handler(command);
+      const opts = parseArgs(args);
+      directory.builtins.type.handler(opts);
+      return;
+    }
+
+    case "pwd": {
+      directory.builtins.pwd.handler();
       return;
     }
 
