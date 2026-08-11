@@ -68,7 +68,6 @@ const directory: Directory = {
         const stats = statSync(candidatePath);
         if (stats) {
           if (stats.isDirectory()) {
-            console.log("path", candidatePath);
             shell.updateDir(candidatePath);
           } else {
             console.log(`${candidatePath}: No such file or directory`);
@@ -124,8 +123,7 @@ function dispatch(command: string, args: string[]) {
   // This should morph into the parser eg echo should send string not string[]
   switch (command) {
     case "cd": {
-      console.log("arg", args);
-      const path = parseArgs(args)[0];
+      const path = parseArgs(args.slice(0, 1));
       directory.builtins.cd.handler(path);
       return;
     }
