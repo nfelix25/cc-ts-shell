@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { accessSync, constants, existsSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import path, * as nodePath from "node:path";
 import type { Interface } from "node:readline";
 
@@ -48,20 +49,29 @@ type Directory = {
   [K in "builtins" | "executables"]: Record<string, { handler: Function }>;
 };
 
+function expandTilde(candidatePath: string) {
+  if (candidatePath === "~") {
+    return homedir();
+  } else if (candidatePath.startsWith("~/")) {
+    return path.join(homedir(), candidatePath.slice(2));
+  }
+  return candidatePath;
+}
+
 // Future classes or expansions
 
 const directory: Directory = {
   builtins: {
     cd: {
       handler: (candidatePath: string) => {
-        const resolvedPath = path.resolve(candidatePath);
+        const resolvedPath = path.resolve(expandTilde(candidatePath));
         const pathExists = existsSync(resolvedPath);
 
         if (pathExists) {
-          const stats = statSync(candidatePath);
+          const stats = statSync(resolvedPath);
 
           if (stats.isDirectory()) {
-            process.chdir(candidatePath);
+            process.chdir(resolvedPath);
             return;
           }
         }
