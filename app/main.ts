@@ -6,7 +6,6 @@ import type { Interface } from "node:readline";
 import { createInterface } from "readline";
 
 class ShellIO {
-  #current_directory = "";
   #io: Interface;
 
   constructor() {
@@ -17,15 +16,6 @@ class ShellIO {
     });
 
     this.#io.prompt();
-    this.#current_directory = process.cwd();
-  }
-
-  updateDir(newDir: string) {
-    this.#current_directory = newDir;
-  }
-
-  currentDir() {
-    return this.#current_directory;
   }
 
   io() {
@@ -71,7 +61,7 @@ const directory: Directory = {
           const stats = statSync(candidatePath);
 
           if (stats.isDirectory()) {
-            shell.updateDir(candidatePath);
+            process.chdir(candidatePath);
             return;
           }
         }
@@ -80,7 +70,7 @@ const directory: Directory = {
     },
     exit: { handler: () => rl.close() },
     echo: { handler: (output: string) => console.log(output) },
-    pwd: { handler: () => console.log(shell.currentDir()) },
+    pwd: { handler: () => console.log(process.cwd()) },
     type: {
       handler: (candidateCommand: string) => {
         const isbuiltinCommand = isBuiltinCommand(candidateCommand);
