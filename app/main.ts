@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { accessSync, constants, existsSync, statSync } from "node:fs";
-import * as nodePath from "node:path";
+import path, * as nodePath from "node:path";
 import type { Interface } from "node:readline";
 
 import { createInterface } from "readline";
@@ -64,9 +64,12 @@ const directory: Directory = {
   builtins: {
     cd: {
       handler: (candidatePath: string) => {
-        const candidateExists = existsSync(candidatePath);
-        if (candidateExists) {
+        const resolvedPath = path.resolve(candidatePath);
+        const pathExists = existsSync(resolvedPath);
+
+        if (pathExists) {
           const stats = statSync(candidatePath);
+
           if (stats.isDirectory()) {
             shell.updateDir(candidatePath);
             return;
