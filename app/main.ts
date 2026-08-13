@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { accessSync, constants, existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import path, * as nodePath from "node:path";
@@ -157,10 +157,10 @@ function dispatch(command: string, args: string[]) {
       // TODO 1: MOVE INTO OWN FUNCTION, will need to break out of switch since handling possible executable is an entire subset
       const executablePath = parseExecutablePath(command);
       if (executablePath) {
-        // execSync captures the child's output by default. Using "inherit" connects the
+        // spawnSync captures the child's output by default. Using "inherit" connects the
         // child directly to this shell's stdin, stdout, and stderr, so its full output
         // is displayed as it runs instead of being returned as a Buffer.
-        execSync(`${command} ${args.join(" ")}`, {
+        spawnSync(command, args, {
           stdio: "inherit",
         });
 
