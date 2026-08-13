@@ -201,7 +201,40 @@ function parseInput(input: string): {
   candidateCommand: string;
   args: string[];
 } {
-  const [candidateCommand, ...args] = input.split(" ");
+  const [candidateCommand, argString] = input.split(/ (.*)/s);
+
+  const args: string[] = [],
+    quoteIndices: number[][] = [];
+
+  let currentArg = "";
+
+  for (let i = 0; i < argString?.length; i++) {
+    const currentChar = argString[i],
+      isSpace = currentChar === " ",
+      isQuote = currentChar === "'",
+      isCurrentQuoteUnmatched =
+        quoteIndices[quoteIndices.length - 1]?.length === 1;
+
+    if (isSpace) {
+      if (!isCurrentQuoteUnmatched) {
+        args.push(currentArg);
+        currentArg = "";
+      } else {
+        currentArg += " ";
+      }
+    } else if (isQuote) {
+      if (!isCurrentQuoteUnmatched) {
+        quoteIndices.push([]);
+      }
+      quoteIndices[quoteIndices.length - 1].push(i);
+    } else {
+      currentArg += currentChar;
+    }
+  }
+
+  if (currentArg) {
+    args.push(currentArg);
+  }
 
   return { candidateCommand, args };
 }
