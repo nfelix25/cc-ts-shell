@@ -216,8 +216,10 @@ function parseInput(input: string): {
         quoteIndices[quoteIndices.length - 1]?.length === 1;
 
     if (isSpace) {
-      if (!isCurrentQuoteUnmatched && currentArg) {
-        args.push(currentArg);
+      if (!isCurrentQuoteUnmatched) {
+        if (currentArg) {
+          args.push(currentArg);
+        }
         currentArg = "";
       } else {
         currentArg += " ";
