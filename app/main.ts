@@ -225,16 +225,16 @@ function parseInput(input: string): {
       continue;
     }
 
-    if ((isSlash && !isCurrentQuoteUnmatched) || isSlash) {
+    if (isSlash && !isCurrentQuoteUnmatched) {
       currentlyEscaping = true;
       continue;
     }
 
     if (isCurrentQuoteUnmatched && argString[currentQuoteIndex[0]] === '"') {
-      if (currentArg[currentArg.length - 1] === "\\") {
+      if (isSlash) {
         const escapableCharWithinDoubles = new Set(['"', "\\", "$", "`", "\n"]);
-        if (escapableCharWithinDoubles.has(currentChar)) {
-          currentArg = currentArg.slice(0, currentArg.length - 1) + currentChar;
+        if (escapableCharWithinDoubles.has(argString[i + 1])) {
+          currentlyEscaping = true;
           continue;
         }
       }
