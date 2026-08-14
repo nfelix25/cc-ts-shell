@@ -225,9 +225,19 @@ function parseInput(input: string): {
       continue;
     }
 
-    if (isSlash && !isCurrentQuoteUnmatched) {
+    if ((isSlash && !isCurrentQuoteUnmatched) || isSlash) {
       currentlyEscaping = true;
       continue;
+    }
+
+    if (isCurrentQuoteUnmatched && argString[currentQuoteIndex[0]] === '"') {
+      if (currentArg[currentArg.length - 1] === "\\") {
+        const escapableCharWithinDoubles = new Set(['"', "\\", "$", "`", "\n"]);
+        if (escapableCharWithinDoubles.has(currentChar)) {
+          currentArg = currentArg.slice(0, currentArg.length - 1) + currentChar;
+          continue;
+        }
+      }
     }
 
     if (isSpace) {
