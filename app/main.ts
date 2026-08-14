@@ -208,14 +208,27 @@ function parseInput(input: string): {
   const args: string[] = [],
     quoteIndices: number[][] = [];
 
-  let currentArg = "";
+  let currentArg = "",
+    currentlyEscaping = false;
 
   for (let i = 0; i < argString?.length; i++) {
     const currentChar = argString[i],
       isSpace = currentChar === " ",
       isQuote = currentChar === "'" || currentChar === '"',
+      isSlash = currentChar === "\\",
       currentQuoteIndex = quoteIndices[quoteIndices.length - 1],
       isCurrentQuoteUnmatched = currentQuoteIndex?.length === 1;
+
+    if (currentlyEscaping) {
+      currentArg += currentChar;
+      currentlyEscaping = false;
+      continue;
+    }
+
+    if (isSlash) {
+      currentlyEscaping = true;
+      continue;
+    }
 
     if (isSpace) {
       if (!isCurrentQuoteUnmatched) {
