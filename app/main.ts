@@ -197,6 +197,8 @@ function parsePath<T extends string>(path: ColonPath<T>) {
   return path.split(":");
 }
 
+// DONE FOR THE CHALLENGE ONLY
+// SHOULD BE USING EXECSYNC AND THE DIReCT COMMAND STRING TO AVOID PARSE
 function parseInput(input: string): {
   candidateCommand: string;
   args: string[];
@@ -211,9 +213,9 @@ function parseInput(input: string): {
   for (let i = 0; i < argString?.length; i++) {
     const currentChar = argString[i],
       isSpace = currentChar === " ",
-      isQuote = currentChar === "'",
-      isCurrentQuoteUnmatched =
-        quoteIndices[quoteIndices.length - 1]?.length === 1;
+      isQuote = currentChar === "'" || currentChar === '"',
+      currentQuoteIndex = quoteIndices[quoteIndices.length - 1],
+      isCurrentQuoteUnmatched = currentQuoteIndex?.length === 1;
 
     if (isSpace) {
       if (!isCurrentQuoteUnmatched) {
@@ -227,6 +229,9 @@ function parseInput(input: string): {
     } else if (isQuote) {
       if (!isCurrentQuoteUnmatched) {
         quoteIndices.push([]);
+      } else if (currentChar != argString[currentQuoteIndex[0]]) {
+        currentArg += currentChar;
+        continue;
       }
       quoteIndices[quoteIndices.length - 1].push(i);
     } else {
