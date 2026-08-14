@@ -225,7 +225,7 @@ function parseInput(input: string): {
       continue;
     }
 
-    if (isSlash) {
+    if (isSlash && !isCurrentQuoteUnmatched) {
       currentlyEscaping = true;
       continue;
     }
@@ -239,7 +239,10 @@ function parseInput(input: string): {
       } else {
         currentArg += " ";
       }
-    } else if (isQuote) {
+      continue;
+    }
+
+    if (isQuote) {
       if (!isCurrentQuoteUnmatched) {
         quoteIndices.push([]);
       } else if (currentChar != argString[currentQuoteIndex[0]]) {
