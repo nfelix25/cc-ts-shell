@@ -203,7 +203,13 @@ function parseInput(input: string): {
   candidateCommand: string;
   args: string[];
 } {
-  const [candidateCommand, argString] = input.split(/ (.*)/s);
+  const inputSplitOnFirstSpace = input.split(/ (.*)/s);
+
+  const candidateCommand = inputSplitOnFirstSpace[0];
+
+  const parseCommandWithQuotes = new Set(["'", '"']).has(candidateCommand[0]);
+
+  const argString = `${parseCommandWithQuotes ? candidateCommand : ""}${inputSplitOnFirstSpace[1] ? ` ${inputSplitOnFirstSpace[1]}` : ""}`;
 
   const args: string[] = [],
     quoteIndices: number[][] = [];
@@ -269,7 +275,10 @@ function parseInput(input: string): {
     args.push(currentArg);
   }
 
-  return { candidateCommand, args };
+  return {
+    candidateCommand: parseCommandWithQuotes ? args[0] : candidateCommand,
+    args: parseCommandWithQuotes ? args.slice(1) : args,
+  };
 }
 
 function parseArgs(args: string[]): string {
