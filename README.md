@@ -23,6 +23,12 @@ codecrafters submit
 
 Time to move on to the next stage!
 
+## Refactoring notes
+
+The current implementation is being split into small, course-friendly modules.
+See [the incremental refactor guide](docs/REFACTOR_GUIDE.md) for the target
+layout, module boundaries, test cases, and commit-sized implementation order.
+
 # Stage 2 & beyond
 
 Note: This section is for stages 2 and beyond.

@@ -1,3 +1,14 @@
+/**
+ * REFACTOR GUIDE — ADDED BY CODEX
+ *
+ * This file is the working implementation. Refactor it in the numbered order
+ * described in docs/REFACTOR_GUIDE.md, keeping the shell runnable after each
+ * extraction. Every comment with this marker was added as a guidepost; comments
+ * without the marker are your original notes.
+ *
+ * Target: main.ts eventually imports startRepl() and contains no shell behavior.
+ */
+
 import { spawnSync } from "node:child_process";
 import { accessSync, constants, existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
@@ -6,6 +17,8 @@ import type { Interface } from "node:readline";
 
 import { createInterface } from "readline";
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 6 -> app/repl.ts)
+// Move this only after parsing, builtins, executables, and dispatch are extracted.
 class ShellIO {
   #io: Interface;
 
@@ -27,6 +40,8 @@ class ShellIO {
 const shell = new ShellIO(),
   rl = shell.io();
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 6 -> app/repl.ts)
+// This listener is the integration point: parse one line, dispatch it, then prompt.
 const inputListener: Parameters<typeof rl.on>[1] = (input) => {
   const { candidateCommand, args } = parseInput(input);
 
@@ -45,6 +60,9 @@ const closeListener: Parameters<typeof rl.on>[1] = () => {
 rl.on("line", inputListener);
 rl.on("close", closeListener);
 
+// REFACTOR GUIDE — ADDED BY CODEX (steps 1 and 5)
+// Replace Function with BuiltinHandler from app/types.ts, then remove Directory
+// when app/builtins/index.ts becomes the single registry.
 type Directory = {
   [K in "builtins" | "executables"]: Record<string, { handler: Function }>;
 };
@@ -60,6 +78,9 @@ function expandTilde(candidatePath: string) {
 
 // Future classes or expansions
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 4 -> app/builtins/*)
+// Move one handler at a time and register each one in app/builtins/index.ts.
+// Keep this registry working until dispatch no longer depends on it.
 const directory: Directory = {
   builtins: {
     cd: {
@@ -102,10 +123,16 @@ const directory: Directory = {
   executables: {},
 };
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 4 -> app/builtins/type.ts)
+// This formats `type` output; rename it when moving it so it is not confused
+// with actually executing a command.
 function handleExecutableCommand(command: string, path: string) {
   console.log(`${command} is ${path}`);
 }
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 3 -> app/executable.ts)
+// Move PATH lookup before moving dispatch. Keep lookup separate from execution
+// because the `type` builtin needs to inspect a command without launching it.
 function findExecInPath(dirs: string[], command: string) {
   for (const dir of dirs) {
     if (!dir) continue;
@@ -122,6 +149,9 @@ function findExecInPath(dirs: string[], command: string) {
   return undefined;
 }
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 5 -> app/dispatch.ts)
+// After all builtins use BuiltinHandler, replace this switch with one registry
+// lookup followed by the external-command fallback.
 function dispatch(command: string, args: string[]) {
   // This should morph into the parser eg echo should send string not string[]
   switch (command) {
@@ -176,6 +206,9 @@ function dispatch(command: string, args: string[]) {
 
 // One off functions
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 3 -> app/executable.ts)
+// Prefer a final API like findExecutable(command, pathValue). PATH is runtime
+// data, so the ColonPath type below does not provide useful safety.
 function parseExecutablePath(command: string) {
   const paths = parsePath(process.env.PATH ?? "");
   const executablePath = findExecInPath(paths, command);
@@ -199,6 +232,9 @@ function parsePath<T extends string>(path: ColonPath<T>) {
 
 // DONE FOR THE CHALLENGE ONLY
 // SHOULD BE USING EXECSYNC AND THE DIReCT COMMAND STRING TO AVOID PARSE
+// REFACTOR GUIDE — ADDED BY CODEX (step 2 -> app/parse.ts)
+// Move this function unchanged first and add characterization tests. Rename
+// candidateCommand to name only after the extraction is green.
 function parseInput(input: string): {
   candidateCommand: string;
   args: string[];
@@ -281,14 +317,21 @@ function parseInput(input: string): {
   };
 }
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 7 cleanup)
+// Remove this after handlers receive string[] and join only when their own
+// behavior requires it (for example, echo).
 function parseArgs(args: string[]): string {
   return args.join(" ");
 }
 
+// REFACTOR GUIDE — ADDED BY CODEX (steps 4-5 -> app/builtins/index.ts)
+// Both `type` and dispatch should query the same builtin registry.
 function isBuiltinCommand(candidateBuiltinCommand: string) {
   return candidateBuiltinCommand in directory.builtins;
 }
 
+// REFACTOR GUIDE — ADDED BY CODEX (step 5 -> app/dispatch.ts)
+// Command-not-found is a routing outcome, so keep its output beside dispatch.
 function handleCommandNotFound(command: string) {
   console.log(`${command}: not found`);
 }
