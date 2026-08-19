@@ -1,6 +1,12 @@
+import type { BuiltinHandler } from "../types.ts";
+
 /**
- * Implements only the exit builtin.
+ * End the shell by closing its I/O rather than killing the process.
  *
- * TODO (refactor step 4): Close ShellIO. This module should not know that the
- * concrete implementation is backed by readline.
+ * exit expresses a shell action while the REPL owns terminal lifecycle. Going
+ * through `io.close()` lets the concrete adapter clean up its listeners, and
+ * keeps this builtin testable without ending the test runner.
  */
+export const exitBuiltin: BuiltinHandler = (args, io) => {
+  io.close();
+};

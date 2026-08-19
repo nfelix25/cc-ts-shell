@@ -23,11 +23,20 @@ codecrafters submit
 
 Time to move on to the next stage!
 
-## Refactoring notes
+## Architecture
 
-The current implementation is being split into small, course-friendly modules.
-See [the incremental refactor guide](docs/REFACTOR_GUIDE.md) for the target
-layout, module boundaries, test cases, and commit-sized implementation order.
+The shell is split into small modules: `parse.ts` turns a line into a
+`ParsedCommand`, `dispatch.ts` routes it to a builtin or a PATH executable, and
+`repl.ts` owns the readline lifecycle. `app/main.ts` only calls `startRepl()`.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module map, the
+reasoning behind each boundary, how to add a builtin, and the handoff into the
+redirection and completion stages.
+
+```sh
+npm test
+npm run typecheck
+```
 
 # Stage 2 & beyond
 

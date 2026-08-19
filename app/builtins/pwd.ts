@@ -1,6 +1,11 @@
+import type { BuiltinHandler } from "../types.ts";
+
 /**
- * Implements only the pwd builtin.
+ * Report the shell process's current working directory.
  *
- * TODO (refactor step 4): Read the shell process's current directory and write
- * it through ShellIO.
+ * The working directory is state owned by this process. pwd observes it and cd
+ * changes it, so both go through the same process-level API.
  */
+export const pwdBuiltin: BuiltinHandler = (args, io) => {
+  io.writeLine(process.cwd());
+};

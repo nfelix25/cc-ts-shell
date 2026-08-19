@@ -1,6 +1,12 @@
+import type { BuiltinHandler } from "../types.ts";
+
 /**
- * Implements only the echo builtin.
+ * Write the arguments back, separated by single spaces.
  *
- * TODO (refactor step 4): Accept parsed args plus ShellIO, join the arguments
- * according to the behavior already covered by the course, and write the line.
+ * echo does no parsing of its own: quote characters and escapes are syntax and
+ * belong to parse.ts. By the time echo runs it sees only the values the user
+ * meant, so no quoting rules are duplicated across builtins.
  */
+export const echoBuiltin: BuiltinHandler = (args, io) => {
+  io.writeLine(args.join(" "));
+};
