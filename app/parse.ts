@@ -19,22 +19,14 @@ import type { ParsedCommand } from "./types.ts";
  * operator and its target from `args`, and return them as `redirections`.
  */
 export function parseInput(input: string): ParsedCommand {
-  const inputSplitOnFirstSpace = input.split(/ (.*)/s);
-
-  const candidateCommand = inputSplitOnFirstSpace[0];
-
-  const parseCommandWithQuotes = new Set(["'", '"']).has(candidateCommand[0]);
-
-  const argString = `${parseCommandWithQuotes ? candidateCommand : ""}${inputSplitOnFirstSpace[1] ? ` ${inputSplitOnFirstSpace[1]}` : ""}`;
-
-  const args: string[] = [],
+  const words: string[] = [],
     quoteIndices: number[][] = [];
 
-  let currentArg = "",
+  let currentWord = "",
     currentlyEscaping = false;
 
-  for (let i = 0; i < argString?.length; i++) {
-    const currentChar = argString[i],
+  for (let i = 0; i < input.length; i++) {
+    const currentChar = input[i],
       isSpace = currentChar === " ",
       isQuote = currentChar === "'" || currentChar === '"',
       isSlash = currentChar === "\\",
@@ -42,7 +34,7 @@ export function parseInput(input: string): ParsedCommand {
       isCurrentQuoteUnmatched = currentQuoteIndex?.length === 1;
 
     if (currentlyEscaping) {
-      currentArg += currentChar;
+      currentWord += currentChar;
       currentlyEscaping = false;
       continue;
     }
@@ -52,10 +44,10 @@ export function parseInput(input: string): ParsedCommand {
       continue;
     }
 
-    if (isCurrentQuoteUnmatched && argString[currentQuoteIndex[0]] === '"') {
+    if (isCurrentQuoteUnmatched && input[currentQuoteIndex[0]] === '"') {
       if (isSlash) {
         const escapableCharWithinDoubles = new Set(['"', "\\", "$", "`", "\n"]);
-        if (escapableCharWithinDoubles.has(argString[i + 1])) {
+        if (escapableCharWithinDoubles.has(input[i + 1])) {
           currentlyEscaping = true;
           continue;
         }
@@ -64,12 +56,12 @@ export function parseInput(input: string): ParsedCommand {
 
     if (isSpace) {
       if (!isCurrentQuoteUnmatched) {
-        if (currentArg) {
-          args.push(currentArg);
+        if (currentWord) {
+          words.push(currentWord);
         }
-        currentArg = "";
+        currentWord = "";
       } else {
-        currentArg += " ";
+        currentWord += " ";
       }
       continue;
     }
@@ -77,23 +69,23 @@ export function parseInput(input: string): ParsedCommand {
     if (isQuote) {
       if (!isCurrentQuoteUnmatched) {
         quoteIndices.push([]);
-      } else if (currentChar != argString[currentQuoteIndex[0]]) {
-        currentArg += currentChar;
+      } else if (currentChar != input[currentQuoteIndex[0]]) {
+        currentWord += currentChar;
         continue;
       }
       quoteIndices[quoteIndices.length - 1].push(i);
     } else {
-      currentArg += currentChar;
+      currentWord += currentChar;
     }
   }
 
-  if (currentArg) {
-    args.push(currentArg);
+  if (currentWord) {
+    words.push(currentWord);
   }
 
   return {
-    name: parseCommandWithQuotes ? args[0] : candidateCommand,
-    args: parseCommandWithQuotes ? args.slice(1) : args,
+    name: words[0] ?? "",
+    args: words.slice(1),
     redirections: [],
   };
 }
