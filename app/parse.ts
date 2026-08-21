@@ -8,10 +8,6 @@ import type { ParsedCommand } from "./types.ts";
  * syntax or data depends on the surrounding quote context: a space separates
  * arguments normally, but is literal text inside quotes.
  *
- * `quoteIndices` tracks quote pairs as they open and close. An entry holding a
- * single index is a quote that is still open, which is what makes the current
- * character "inside quotes".
- *
  * This module is pure — it knows nothing about readline, the filesystem, or
  * command execution — so its behavior is fully determined by the input string.
  *
@@ -19,19 +15,17 @@ import type { ParsedCommand } from "./types.ts";
  * operator and its target from `args`, and return them as `redirections`.
  */
 export function parseInput(input: string): ParsedCommand {
-  const words: string[] = [],
-    quoteIndices: number[][] = [];
+  const words: string[] = [];
 
   let currentWord = "",
+    currentQuote: string | null = null,
     currentlyEscaping = false;
 
   for (let i = 0; i < input.length; i++) {
     const currentChar = input[i],
       isSpace = currentChar === " ",
       isQuote = currentChar === "'" || currentChar === '"',
-      isSlash = currentChar === "\\",
-      currentQuoteIndex = quoteIndices[quoteIndices.length - 1],
-      isCurrentQuoteUnmatched = currentQuoteIndex?.length === 1;
+      isSlash = currentChar === "\\";
 
     if (currentlyEscaping) {
       currentWord += currentChar;
@@ -39,13 +33,11 @@ export function parseInput(input: string): ParsedCommand {
       continue;
     }
 
-    if (isSlash && !isCurrentQuoteUnmatched) {
-      currentlyEscaping = true;
-      continue;
-    }
-
-    if (isCurrentQuoteUnmatched && input[currentQuoteIndex[0]] === '"') {
-      if (isSlash) {
+    if (isSlash) {
+      if (currentQuote === null) {
+        currentlyEscaping = true;
+        continue;
+      } else if (currentQuote === '"') {
         const escapableCharWithinDoubles = new Set(['"', "\\", "$", "`", "\n"]);
         if (escapableCharWithinDoubles.has(input[i + 1])) {
           currentlyEscaping = true;
@@ -55,7 +47,7 @@ export function parseInput(input: string): ParsedCommand {
     }
 
     if (isSpace) {
-      if (!isCurrentQuoteUnmatched) {
+      if (currentQuote === null) {
         if (currentWord) {
           words.push(currentWord);
         }
@@ -67,13 +59,13 @@ export function parseInput(input: string): ParsedCommand {
     }
 
     if (isQuote) {
-      if (!isCurrentQuoteUnmatched) {
-        quoteIndices.push([]);
-      } else if (currentChar != input[currentQuoteIndex[0]]) {
+      if (currentQuote === null) {
+        currentQuote = currentChar;
+      } else if (currentChar === currentQuote) {
+        currentQuote = null;
+      } else {
         currentWord += currentChar;
-        continue;
       }
-      quoteIndices[quoteIndices.length - 1].push(i);
     } else {
       currentWord += currentChar;
     }
