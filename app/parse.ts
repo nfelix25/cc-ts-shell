@@ -1,5 +1,7 @@
 import type { ParsedCommand } from "./types.ts";
 
+const DBL_QUOTE_ESCAPABLES = new Set(['"', "\\", "$", "`", "\n"]);
+
 /**
  * Convert one terminal line into a command name, its arguments, and any
  * redirections.
@@ -34,15 +36,12 @@ export function parseInput(input: string): ParsedCommand {
     }
 
     if (isSlash) {
-      if (currentQuote === null) {
+      const escapeNextChar =
+        currentQuote === null ||
+        (currentQuote === '"' && DBL_QUOTE_ESCAPABLES.has(input[i + 1]));
+      if (escapeNextChar) {
         currentlyEscaping = true;
         continue;
-      } else if (currentQuote === '"') {
-        const escapableCharWithinDoubles = new Set(['"', "\\", "$", "`", "\n"]);
-        if (escapableCharWithinDoubles.has(input[i + 1])) {
-          currentlyEscaping = true;
-          continue;
-        }
       }
     }
 
